@@ -45,6 +45,22 @@ mock('GET', '/inventory/summary', () => {
   };
 });
 
+mock('GET', '/inventory/alerts', () => {
+  const rows = variantRows();
+  return {
+    available: rows.reduce((s, r) => s + r.available, 0),
+    lowStockThreshold: configInt('low_stock_threshold', 15),
+    expiryWarningDays: configInt('expiry_warning_days', 5),
+    lowStock: rows.filter((r) => r.isLow).map((r) => ({ sku: r.sku, productName: r.productName, available: r.available })),
+    nearExpiry: nearExpiryRows().map((l) => ({
+      lotCode: l.lotCode,
+      productName: l.productName,
+      daysLeft: l.daysLeft ?? 0,
+      qty: l.available + l.held + l.quarantine + l.expired,
+    })),
+  };
+});
+
 mock('GET', '/inventory/variants', ({ query }) => {
   const rows = variantRows()
     .filter((r) => matches(query.q, r.sku, r.productName))
@@ -73,6 +89,13 @@ mock('GET', '/inventory/ledger', ({ query }) => {
     }))
     .filter((e) => matches(query.q, e.sku, e.productName, e.lotCode, e.note))
     .filter((e) => !query.entryType || e.entryType === query.entryType)
+    .filter((e) => {
+      if (!query.from && !query.to) return true;
+      const day = e.createdAt.slice(0, 10);
+      if (query.from && day < String(query.from)) return false;
+      if (query.to && day > String(query.to)) return false;
+      return true;
+    })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id - a.id);
   return paginate(rows, query);
 });
@@ -100,4 +123,29 @@ mock('POST', '/inventory/moves', ({ body, userId }) => {
   target.qtyAvailable += qty;
   appendLedger({ variantId: source.variantId, lotId: source.lotId, locationId: source.locationId, toLocationId: body.toLocationId, entryType: 'move', qtyDelta: qty, balanceAfter: target.qtyAvailable, refType: null, refId: null, note: 'Chuyển vị trí', createdBy: userId });
   audit(userId, 'move', 'stock', source.id, { qty, to: body.toLocationId });
+});
+
+mock('POST', '/inventory/adjusts', ({ body, userId }) => {
+  const source = db.stock.find((s) => s.id === body.stockId);
+  if (!source) fail(404, 'Không tìm thấy dòng tồn');
+  const qtyDelta = Number(body.qtyDelta);
+  const note = String(body.note ?? '').trim();
+  if (!Number.isInteger(qtyDelta) || qtyDelta === 0) fail(400, 'Số lượng điều chỉnh phải khác 0');
+  if (!note) fail(400, 'Vui lòng nhập lý do điều chỉnh');
+  if (qtyDelta < 0 && Math.abs(qtyDelta) > source.qtyAvailable) fail(409, 'Không đủ tồn kho');
+  source.qtyAvailable += qtyDelta;
+  appendLedger({
+    variantId: source.variantId,
+    lotId: source.lotId,
+    locationId: source.locationId,
+    toLocationId: null,
+    entryType: 'adjust',
+    qtyDelta,
+    balanceAfter: source.qtyAvailable,
+    refType: null,
+    refId: null,
+    note,
+    createdBy: userId,
+  });
+  audit(userId, 'adjust', 'stock', source.id, { qtyDelta, note });
 });
