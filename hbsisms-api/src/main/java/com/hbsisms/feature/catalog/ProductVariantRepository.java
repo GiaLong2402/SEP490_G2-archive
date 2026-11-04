@@ -17,4 +17,8 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     @EntityGraph(attributePaths = "product")
     List<ProductVariant> findByProduct_IdOrderByIdAsc(Long productId);
+
+    boolean existsBySkuIgnoreCase(String sku);
+
+    boolean existsBySkuIgnoreCaseAndIdNot(String sku, Long id);
 }
