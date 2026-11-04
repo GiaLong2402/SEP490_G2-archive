@@ -13,6 +13,7 @@ import com.hbsisms.feature.inventory.dto.NearExpiryAlertResponse;
 import com.hbsisms.feature.inventory.dto.VariantStockRowResponse;
 import com.hbsisms.feature.system.AppConfigService;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -107,12 +108,30 @@ public class InventoryQueryService {
         return paginate(rows, page, pageSize);
     }
 
-    public PageResponse<LedgerRowResponse> ledger(String q, String entryType, int page, int pageSize) {
+    public PageResponse<LedgerRowResponse> ledger(
+            String q, String entryType, LocalDate from, LocalDate to, int page, int pageSize) {
         LedgerEntryType typeFilter = parseEntryType(entryType);
+        ZoneId zone = ZoneId.systemDefault();
         List<LedgerRowResponse> rows = stockLedgerRepository.findAllWithDetailsOrderByCreatedAtDesc().stream()
                 .map(this::toLedgerRow)
                 .filter(r -> typeFilter == null || r.entryType() == typeFilter)
                 .filter(r -> matches(q, r.sku(), r.productName(), r.lotCode(), r.note()))
+                .filter(r -> {
+                    if (from == null && to == null) {
+                        return true;
+                    }
+                    if (r.createdAt() == null) {
+                        return false;
+                    }
+                    LocalDate day = r.createdAt().atZone(zone).toLocalDate();
+                    if (from != null && day.isBefore(from)) {
+                        return false;
+                    }
+                    if (to != null && day.isAfter(to)) {
+                        return false;
+                    }
+                    return true;
+                })
                 .toList();
         return paginate(rows, page, pageSize);
     }
