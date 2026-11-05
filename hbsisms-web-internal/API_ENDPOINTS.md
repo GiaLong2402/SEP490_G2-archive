@@ -39,6 +39,7 @@ Tổng cộng 97 endpoint, sinh từ `src/features/*/mock.ts`. Kiểu dữ liệ
 | GET | `/customers/:id` |
 | POST | `/customers` |
 | PUT | `/customers/:id` |
+| PATCH | `/customers/:id/active` |
 | GET | `/customers/:id/addresses` |
 | POST | `/customers/:id/addresses` |
 | POST | `/customers/:id/prices` |
@@ -80,9 +81,10 @@ Tổng cộng 97 endpoint, sinh từ `src/features/*/mock.ts`. Kiểu dữ liệ
 | GET | `/inventory/variants` |
 | GET | `/inventory/lots` |
 | GET | `/inventory/near-expiry` |
-| GET | `/inventory/ledger` |
+| GET | `/inventory/ledger` | query: `q`, `entryType`, `from`, `to` (yyyy-MM-dd), page |
 | GET | `/locations` |
 | POST | `/inventory/moves` |
+| POST | `/inventory/adjusts` | body: `{ stockId, qtyDelta, note }` → 204; ledger `ADJUST` + audit |
 
 ## marketing
 

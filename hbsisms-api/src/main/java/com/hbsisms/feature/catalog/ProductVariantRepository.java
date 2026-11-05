@@ -14,4 +14,14 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     @Override
     @EntityGraph(attributePaths = "product")
     List<ProductVariant> findAll(Sort sort);
+
+    @EntityGraph(attributePaths = "product")
+    List<ProductVariant> findByProduct_IdOrderByIdAsc(Long productId);
+
+    boolean existsBySkuIgnoreCase(String sku);
+
+    boolean existsBySkuIgnoreCaseAndIdNot(String sku, Long id);
+
+    /** True if the product has at least one sellable variant (for B2C publish). */
+    boolean existsByProduct_IdAndActiveTrue(Long productId);
 }

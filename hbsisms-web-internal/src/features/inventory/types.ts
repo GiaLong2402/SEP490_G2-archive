@@ -42,6 +42,15 @@ export interface InventorySummary {
   expiryWarningDays: number;
 }
 
+/** GET /inventory/alerts — tồn thấp + sắp hết hạn (task 32). */
+export interface InventoryAlerts {
+  available: number;
+  lowStockThreshold: number;
+  expiryWarningDays: number;
+  lowStock: { sku: string; productName: string; available: number }[];
+  nearExpiry: { lotCode: string; productName: string; daysLeft: number; qty: number }[];
+}
+
 export interface LedgerRow extends StockLedger {
   sku: string;
   productName: string;
@@ -55,6 +64,12 @@ export interface MoveInput {
   stockId: ID;
   toLocationId: ID;
   qty: number;
+}
+
+export interface AdjustInput {
+  stockId: ID;
+  qtyDelta: number;
+  note: string;
 }
 
 /** Vị trí kèm nhãn sẵn để hiển thị trong ô chọn. */

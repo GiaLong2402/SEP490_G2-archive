@@ -35,6 +35,18 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             """)
     Optional<Stock> findWithDetailsById(@Param("id") Long id);
 
+    /** Rows with sellable trays on lots whose HSD is before {@code today} (task 38 expire job). */
+    @Query("""
+            select distinct s from Stock s
+            join fetch s.variant
+            join fetch s.lot l
+            join fetch s.location
+            where l.expDate is not null
+              and l.expDate < :today
+              and s.qtyAvailable > 0
+            """)
+    List<Stock> findAvailablePastExpiry(@Param("today") java.time.LocalDate today);
+
     @Query("""
             select coalesce(sum(s.qtyAvailable + s.qtyHeld + s.qtyQuarantine + s.qtyExpired), 0)
             from Stock s
@@ -98,4 +110,12 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             """)
     long sumAvailableByVariantExcludingExpired(
             @Param("variantId") Long variantId, @Param("today") java.time.LocalDate today);
+
+    /** Tổng khay khả dụng theo variant (dùng cho danh sách / chi tiết sản phẩm). */
+    @Query("""
+            select coalesce(sum(s.qtyAvailable), 0)
+            from Stock s
+            where s.variant.id = :variantId
+            """)
+    long sumQtyAvailableByVariantId(@Param("variantId") Long variantId);
 }

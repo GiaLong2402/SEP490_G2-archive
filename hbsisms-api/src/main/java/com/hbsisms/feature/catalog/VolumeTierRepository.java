@@ -7,4 +7,8 @@ public interface VolumeTierRepository extends JpaRepository<VolumeTier, Long> {
 
     List<VolumeTier> findByVariant_IdAndMinQtyKhayLessThanEqualOrderByMinQtyKhayDesc(
             Long variantId, int minQtyKhay);
+
+    List<VolumeTier> findByVariant_IdOrderByMinQtyKhayAsc(Long variantId);
+
+    void deleteByVariant_Id(Long variantId);
 }

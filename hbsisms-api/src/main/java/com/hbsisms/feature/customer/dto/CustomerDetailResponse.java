@@ -7,8 +7,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Matches FE {@code CustomerDetail}. Temporary read endpoint so Address/Price UI can be tested
- * before Duy finishes full Customer CRUD (list/create/update).
+ * Matches FE {@code CustomerDetail}. {@code recentOrders} stays empty until sales module lands.
  */
 public record CustomerDetailResponse(
         Long id,
