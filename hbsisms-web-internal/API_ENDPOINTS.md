@@ -137,7 +137,7 @@ Tổng cộng 97 endpoint, sinh từ `src/features/*/mock.ts`. Kiểu dữ liệ
 ## products
 
 Contract FE (Doanh — form/variant): body/response khớp `features/products/types.ts`.
-Jackson khóa tên field `isPublished` / `isActive` (không `published` / `active`). Xem `docs/catalog-fe-contract.md`.
+Jackson khóa tên field `isPublished` / `isActive` (không `published` / `active`).
 
 | Phương thức | Đường dẫn | Ghi chú contract |
 |---|---|---|
